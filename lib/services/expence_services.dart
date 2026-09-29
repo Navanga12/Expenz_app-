@@ -99,8 +99,48 @@ class ExpenceService {
     }
   }
 
+  // Update an existing expense in shared preferences
+  Future<void> updateExpense(Expense updatedExpense, BuildContext context) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String>? existingExpenses = prefs.getStringList(_expensesKey);
 
-  //delete all expenses from shared preferences
+      List<Expense> existingExpenseObjects = [];
+      if (existingExpenses != null) {
+        existingExpenseObjects = existingExpenses
+            .map((e) => Expense.fromJson(json.decode(e)))
+            .toList();
+      }
+
+      // Find the index of the expense with the specified id
+      int index =
+          existingExpenseObjects.indexWhere((element) => element.id == updatedExpense.id);
+
+      if (index != -1) {
+        existingExpenseObjects[index] = updatedExpense;
+
+        // Convert the list back to JSON strings
+        List<String> updatedExpenses =
+            existingExpenseObjects.map((e) => json.encode(e.toJson())).toList();
+
+        // Save to shared preferences
+        await prefs.setStringList(_expensesKey, updatedExpenses);
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Expense updated successfully'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+
   Future<void> deleteAllExpenses(BuildContext context) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -117,42 +157,4 @@ class ExpenceService {
       print(e.toString());
     }
   }
-
-  // Update an existing expense in shared preferences
-  Future<void> updateExpense(Expense updatedExpense, BuildContext context) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String>? existingExpenses = prefs.getStringList(_expensesKey);
-
-      List<Expense> existingExpenseObjects = [];
-      if (existingExpenses != null) {
-        existingExpenseObjects = existingExpenses
-            .map((e) => Expense.fromJson(json.decode(e)))
-            .toList();
-      }
-
-      int index =
-          existingExpenseObjects.indexWhere((e) => e.id == updatedExpense.id);
-      if (index != -1) {
-        existingExpenseObjects[index] = updatedExpense;
-
-        List<String> updatedExpenseStrings =
-            existingExpenseObjects.map((e) => json.encode(e.toJson())).toList();
-
-        await prefs.setStringList(_expensesKey, updatedExpenseStrings);
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Expense updated successfully'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print(e.toString());
-    }
-  }
 }
-

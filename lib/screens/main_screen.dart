@@ -99,18 +99,7 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  // Function to delete an expense
-  void deleteExpense(Expense expense) {
-    // Delete the expense from shared preferences
-    ExpenceService().deleteExpense(expense.id, context);
-
-    // Update the list of expenses
-    setState(() {
-      expensesList.remove(expense);
-    });
-  }
-
-  // Function to update an existing expense
+  // Function to edit/update an existing expense
   void updateExpense(Expense updatedExpense) {
     // Update the expense in shared preferences
     ExpenceService().updateExpense(updatedExpense, context);
@@ -121,6 +110,17 @@ class _MainScreenState extends State<MainScreen> {
       if (index != -1) {
         expensesList[index] = updatedExpense;
       }
+    });
+  }
+
+  // Function to delete an expense
+  void deleteExpense(Expense expense) {
+    // Delete the expense from shared preferences
+    ExpenceService().deleteExpense(expense.id, context);
+
+    // Update the list of expenses
+    setState(() {
+      expensesList.remove(expense);
     });
   }
 
@@ -162,7 +162,6 @@ class _MainScreenState extends State<MainScreen> {
     final List<Widget> pages = [
       HomeScreen(
         expensesList: expensesList,
-        onUpdateExpense: updateExpense,
       ),
       TransactionsScreen(
         expensesList: expensesList,
