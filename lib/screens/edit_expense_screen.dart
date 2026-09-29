@@ -87,21 +87,43 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     }
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final double amount = double.parse(_amountController.text.trim());
-      final updatedExpense = Expense(
-        id: widget.expense.id,
-        title: _titleController.text.trim(),
-        amount: amount,
-        category: _selectedCategory,
-        date: _selectedDate,
-        time: _selectedTime,
-        description: _descriptionController.text.trim(),
-      );
+  bool _isSubmitting = false;
 
-      widget.onUpdateExpense(updatedExpense);
-      Navigator.pop(context);
+  void _submitForm() async {
+    if (_isSubmitting) return;
+
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isSubmitting = true);
+      try {
+        final double amount = double.parse(_amountController.text.trim());
+        final updatedExpense = Expense(
+          id: widget.expense.id,
+          title: _titleController.text.trim(),
+          amount: amount,
+          category: _selectedCategory,
+          date: _selectedDate,
+          time: _selectedTime,
+          description: _descriptionController.text.trim(),
+        );
+
+        await widget.onUpdateExpense(updatedExpense);
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update expense: $e'),
+              backgroundColor: kRed,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
+      }
     }
   }
 
@@ -366,11 +388,29 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                       ),
                       const SizedBox(height: 30),
                       GestureDetector(
-                        onTap: _submitForm,
-                        child: const CustumButton(
-                          buttonName: "Save Changes",
-                          buttonColor: kRed,
-                        ),
+                        onTap: _isSubmitting ? null : _submitForm,
+                        child: _isSubmitting
+                            ? Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: kRed,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: const Center(
+                                  child: SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      color: kWhite,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const CustumButton(
+                                buttonName: "Save Changes",
+                                buttonColor: kRed,
+                              ),
                       ),
                       const SizedBox(height: 20),
                     ],

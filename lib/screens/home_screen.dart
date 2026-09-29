@@ -14,12 +14,18 @@ class HomeScreen extends StatefulWidget {
   final List<Expense> expensesList;
   final List<Income> incomeList;
   final void Function(Expense)? onUpdateExpense;
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback? onRetry;
 
   const HomeScreen({
     super.key,
     required this.expensesList,
     this.incomeList = const [],
     this.onUpdateExpense,
+    this.isLoading = false,
+    this.errorMessage,
+    this.onRetry,
   });
 
   @override
@@ -303,16 +309,76 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    if (widget.expensesList.isEmpty)
+                    if (widget.isLoading)
                       const Center(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Text(
-                            "No expenses added yet, add some expenses to see here",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: kGrey,
-                            ),
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(color: kMainColor),
+                              SizedBox(height: 12),
+                              Text(
+                                "Loading transactions...",
+                                style: TextStyle(color: kGrey),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (widget.errorMessage != null)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.cloud_off, size: 36, color: kRed),
+                              const SizedBox(height: 8),
+                              Text(
+                                widget.errorMessage!,
+                                style: const TextStyle(color: kGrey),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 10),
+                              if (widget.onRetry != null)
+                                ElevatedButton.icon(
+                                  onPressed: widget.onRetry,
+                                  icon: const Icon(Icons.refresh, size: 16),
+                                  label: const Text("Retry"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kMainColor,
+                                    foregroundColor: kWhite,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (widget.expensesList.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 48,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                "No expenses recorded yet",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: kBlack,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                "Tap the '+' button below to add your first expense",
+                                style: TextStyle(fontSize: 13, color: kGrey),
+                              ),
+                            ],
                           ),
                         ),
                       )

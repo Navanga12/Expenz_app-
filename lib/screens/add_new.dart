@@ -42,44 +42,64 @@ class _AddNewScreenState extends State<AddNewScreen> {
     super.dispose();
   }
 
-  void _submitForm() {
+  bool _isSubmitting = false;
+
+  void _submitForm() async {
+    if (_isSubmitting) return;
+
     if (_formKey.currentState!.validate()) {
-      final double amount = double.parse(_amountController.text.trim());
+      setState(() => _isSubmitting = true);
+      try {
+        final double amount = double.parse(_amountController.text.trim());
 
-      if (_selected == 0) {
-        Expense expense = Expense(
-          id: DateTime.now().millisecondsSinceEpoch,
-          title: _titleController.text.trim(),
-          amount: amount,
-          category: _expenceCategory,
-          date: _selectedDate,
-          time: _selectedTime,
-          description: _descriptionController.text.trim(),
-        );
+        if (_selected == 0) {
+          Expense expense = Expense(
+            id: DateTime.now().millisecondsSinceEpoch,
+            title: _titleController.text.trim(),
+            amount: amount,
+            category: _expenceCategory,
+            date: _selectedDate,
+            time: _selectedTime,
+            description: _descriptionController.text.trim(),
+          );
 
-        widget.addExpense(expense);
-      } else {
-        Income income = Income(
-          id: DateTime.now().millisecondsSinceEpoch,
-          title: _titleController.text.trim(),
-          amount: amount,
-          category: _incomeCategory,
-          date: _selectedDate,
-          time: _selectedTime,
-          description: _descriptionController.text.trim(),
-        );
+          await widget.addExpense(expense);
+        } else {
+          Income income = Income(
+            id: DateTime.now().millisecondsSinceEpoch,
+            title: _titleController.text.trim(),
+            amount: amount,
+            category: _incomeCategory,
+            date: _selectedDate,
+            time: _selectedTime,
+            description: _descriptionController.text.trim(),
+          );
 
-        widget.addIcome(income);
+          await widget.addIcome(income);
+        }
+
+        // Clear text fields and reset
+        _titleController.clear();
+        _amountController.clear();
+        _descriptionController.clear();
+        setState(() {
+          _selectedDate = DateTime.now();
+          _selectedTime = DateTime.now();
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to add transaction: $e'),
+              backgroundColor: kRed,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
       }
-
-      // Clear text fields and reset
-      _titleController.clear();
-      _amountController.clear();
-      _descriptionController.clear();
-      setState(() {
-        _selectedDate = DateTime.now();
-        _selectedTime = DateTime.now();
-      });
     }
   }
 
@@ -495,12 +515,31 @@ class _AddNewScreenState extends State<AddNewScreen> {
 
                         // Add Button
                         GestureDetector(
-                          onTap: _submitForm,
-                          child: CustumButton(
-                            buttonName:
-                                _selected == 0 ? "Add Expense" : "Add Income",
-                            buttonColor: _selected == 0 ? kRed : kGreen,
-                          ),
+                          onTap: _isSubmitting ? null : _submitForm,
+                          child: _isSubmitting
+                              ? Container(
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: _selected == 0 ? kRed : kGreen,
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: const Center(
+                                    child: SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        color: kWhite,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : CustumButton(
+                                  buttonName: _selected == 0
+                                      ? "Add Expense"
+                                      : "Add Income",
+                                  buttonColor: _selected == 0 ? kRed : kGreen,
+                                ),
                         ),
                         const SizedBox(height: 20),
                       ],

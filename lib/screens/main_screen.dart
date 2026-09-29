@@ -67,25 +67,37 @@ class _MainScreenState extends State<MainScreen> {
     return categoryTotals;
   }
 
+  // Loading and error states
+  bool _isLoadingExpenses = true;
+  String? _expensesErrorMessage;
+
   @override
   void initState() {
     super.initState();
-    // Fetch all the expenses when the widget is first initialized
-    setState(() {
-      fetchExpenses();
-      fetchIncomes();
-    });
+    fetchExpenses();
+    fetchIncomes();
   }
 
-  // Function to fetch expenses
+  // Function to fetch expenses with loading and error handling
   void fetchExpenses() async {
-    // Load expenses from shared preferences
-    List<Expense> loadedExpenses = await ExpenceService().loadExpenses();
-
-    // Update expensesList with the fetched expenses
     setState(() {
-      expensesList = loadedExpenses;
+      _isLoadingExpenses = true;
+      _expensesErrorMessage = null;
     });
+
+    try {
+      List<Expense> loadedExpenses = await ExpenceService().loadExpenses();
+      setState(() {
+        expensesList = loadedExpenses;
+        _isLoadingExpenses = false;
+      });
+    } catch (e) {
+      setState(() {
+        _expensesErrorMessage =
+            "Unable to load expenses. Please check your connection.";
+        _isLoadingExpenses = false;
+      });
+    }
   }
 
   // Function to add a new expense
@@ -164,6 +176,9 @@ class _MainScreenState extends State<MainScreen> {
         expensesList: expensesList,
         incomeList: incomesList,
         onUpdateExpense: updateExpense,
+        isLoading: _isLoadingExpenses,
+        errorMessage: _expensesErrorMessage,
+        onRetry: fetchExpenses,
       ),
       TransactionsScreen(
         expensesList: expensesList,
@@ -171,6 +186,9 @@ class _MainScreenState extends State<MainScreen> {
         onUpdateExpense: updateExpense,
         incomeList: incomesList,
         onDismissedIncome: deleteIncome,
+        isLoading: _isLoadingExpenses,
+        errorMessage: _expensesErrorMessage,
+        onRetry: fetchExpenses,
       ),
       AddNewScreen(
         addExpense: addNewExpense,
