@@ -1,7 +1,5 @@
 import 'package:expenz/models/expence_model.dart';
 import 'package:expenz/models/income_model.dart';
-import 'package:expenz/services/expence_services.dart';
-import 'package:expenz/services/income_services.dart';
 import 'package:expenz/utils/colors.dart';
 import 'package:expenz/utils/constants.dart';
 import 'package:expenz/widgets/custum_button.dart';
@@ -22,6 +20,8 @@ class AddNewScreen extends StatefulWidget {
 }
 
 class _AddNewScreenState extends State<AddNewScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   int _selected = 0;
 
   ExpenseCategory _expenceCategory = ExpenseCategory.health;
@@ -29,18 +29,58 @@ class _AddNewScreenState extends State<AddNewScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _selectedTime = DateTime.now();
 
-  //text controllers
+  // Text controllers
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
- //dispose controllers when the widget is disposed to avoid memory leaks
   @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      final double amount = double.parse(_amountController.text.trim());
+
+      if (_selected == 0) {
+        Expense expense = Expense(
+          id: DateTime.now().millisecondsSinceEpoch,
+          title: _titleController.text.trim(),
+          amount: amount,
+          category: _expenceCategory,
+          date: _selectedDate,
+          time: _selectedTime,
+          description: _descriptionController.text.trim(),
+        );
+
+        widget.addExpense(expense);
+      } else {
+        Income income = Income(
+          id: DateTime.now().millisecondsSinceEpoch,
+          title: _titleController.text.trim(),
+          amount: amount,
+          category: _incomeCategory,
+          date: _selectedDate,
+          time: _selectedTime,
+          description: _descriptionController.text.trim(),
+        );
+
+        widget.addIcome(income);
+      }
+
+      // Clear text fields and reset
+      _titleController.clear();
+      _amountController.clear();
+      _descriptionController.clear();
+      setState(() {
+        _selectedDate = DateTime.now();
+        _selectedTime = DateTime.now();
+      });
+    }
   }
 
   @override
@@ -53,7 +93,7 @@ class _AddNewScreenState extends State<AddNewScreen> {
           child: SingleChildScrollView(
             child: Stack(
               children: [
-                //selector
+                // Selector Row (Expense / Income)
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: kDefalutPadding),
@@ -70,7 +110,6 @@ class _AddNewScreenState extends State<AddNewScreen> {
                           onTap: () {
                             setState(() {
                               _selected = 0;
-                              //clear text fields
                               _titleController.clear();
                               _amountController.clear();
                               _descriptionController.clear();
@@ -99,8 +138,6 @@ class _AddNewScreenState extends State<AddNewScreen> {
                           onTap: () {
                             setState(() {
                               _selected = 1;
-
-                              //clear text fields
                               _titleController.clear();
                               _amountController.clear();
                               _descriptionController.clear();
@@ -132,383 +169,344 @@ class _AddNewScreenState extends State<AddNewScreen> {
                   ),
                 ),
 
+                // Live Amount Display
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: kDefalutPadding),
                   child: Container(
                     margin: EdgeInsets.only(
-                        top: MediaQuery.of(context).size.height * 0.1),
+                        top: MediaQuery.of(context).size.height * 0.08),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           "How Much?",
                           style: TextStyle(
-                            color: kLightGrey.withOpacity(0.8),
-                            fontSize: 22,
+                            color: kLightGrey.withValues(alpha: 0.8),
+                            fontSize: 20,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const TextField(
-                          style: TextStyle(
-                            fontSize: 60,
-                            color: kWhite,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: "0",
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(
-                              color: kWhite,
-                              fontSize: 60,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _amountController,
+                          builder: (context, value, child) {
+                            return Text(
+                              "\$${value.text.isEmpty ? '0' : value.text}",
+                              style: const TextStyle(
+                                fontSize: 44,
+                                color: kWhite,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            );
+                          },
                         ),
                       ],
                     ),
                   ),
                 ),
 
+                // Form Container
                 Container(
                   margin: EdgeInsets.only(
-                      top: MediaQuery.of(context).size.height * 0.3),
+                      top: MediaQuery.of(context).size.height * 0.23),
                   padding: const EdgeInsets.all(kDefalutPadding),
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
                     ),
                     color: kWhite,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      //category selector from dropdown
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
 
-                      Form(
-                        child: Column(
-                          children: [
-                            const SizedBox(
-                              height: 10,
+                        // Category selector dropdown
+                        DropdownButtonFormField(
+                          decoration: InputDecoration(
+                            labelText: "Category",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(100),
                             ),
-                            //category selector from dropdown
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 15,
+                              horizontal: 20,
+                            ),
+                          ),
+                          initialValue: _selected == 0
+                              ? _expenceCategory
+                              : _incomeCategory,
+                          icon: const Icon(
+                            Icons.arrow_drop_down_circle_outlined,
+                          ),
+                          items: _selected == 0
+                              ? ExpenseCategory.values.map((category) {
+                                  return DropdownMenuItem(
+                                    value: category,
+                                    child: Row(
+                                      children: [
+                                        Image.asset(
+                                          expenseCategoryImages[category]!,
+                                          width: 20,
+                                          height: 20,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(category.name[0].toUpperCase() +
+                                            category.name.substring(1)),
+                                      ],
+                                    ),
+                                  );
+                                }).toList()
+                              : IncomeCategory.values.map((category) {
+                                  return DropdownMenuItem(
+                                    value: category,
+                                    child: Row(
+                                      children: [
+                                        Image.asset(
+                                          incomeCategoryImages[category]!,
+                                          width: 20,
+                                          height: 20,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(category.name[0].toUpperCase() +
+                                            category.name.substring(1)),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              if (_selected == 0) {
+                                _expenceCategory = value as ExpenseCategory;
+                              } else {
+                                _incomeCategory = value as IncomeCategory;
+                              }
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 15),
 
-                            DropdownButtonFormField(
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                  horizontal: 20,
-                                ),
-                              ),
-                              value: _selected == 0
-                                  ? _expenceCategory
-                                  : _incomeCategory,
-                              icon: const Icon(
-                                Icons.arrow_drop_down_circle_outlined,
-                              ),
-                              items: _selected == 0
-                                  ? ExpenseCategory.values.map((category) {
-                                      return DropdownMenuItem(
-                                        value: category,
-                                        child: Text(category.name),
-                                      );
-                                    }).toList()
-                                  : IncomeCategory.values.map((category) {
-                                      return DropdownMenuItem(
-                                        value: category,
-                                        child: Text(category.name),
-                                      );
-                                    }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selected == 0
-                                      ? _expenceCategory =
-                                          value as ExpenseCategory
-                                      : _incomeCategory =
-                                          value as IncomeCategory;
+                        // Title field with validator
+                        TextFormField(
+                          controller: _titleController,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "Please enter a title";
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            labelText: "Title",
+                            hintText: "e.g. Grocery, Lunch",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 15,
+                              horizontal: 20,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
 
-                                  // print(_selected == 0
-                                  //     ? _expenceCategory.name
-                                  //     : _incomeCategory.name);
+                        // Amount field with numeric keyboard and validator
+                        TextFormField(
+                          controller: _amountController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "Please enter an amount";
+                            }
+                            final parsed = double.tryParse(value.trim());
+                            if (parsed == null || parsed <= 0) {
+                              return "Please enter a valid amount greater than 0";
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            labelText: "Amount",
+                            hintText: "0.00",
+                            prefixText: "\$ ",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 15,
+                              horizontal: 20,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Description field (optional)
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: InputDecoration(
+                            labelText: "Description (Optional)",
+                            hintText: "Add any additional note",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 15,
+                              horizontal: 20,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Date picker
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                showDatePicker(
+                                  context: context,
+                                  initialDate: _selectedDate,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                ).then((value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      _selectedDate = value;
+                                    });
+                                  }
                                 });
                               },
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            //title field
-
-                            TextFormField(
-                              controller: _titleController,
-                              decoration: InputDecoration(
-                                hintText: "Title",
-                                border: OutlineInputBorder(
+                              child: Container(
+                                decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(100),
+                                  color: kMainColor,
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                  horizontal: 20,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            //description field
-
-                            TextFormField(
-                              controller: _descriptionController,
-                              decoration: InputDecoration(
-                                hintText: "Description",
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                  horizontal: 20,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-
-                            //amount field
-
-                            TextFormField(
-                              controller: _amountController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                hintText: "Amount",
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                  horizontal: 20,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            //Date picker
-
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime(2000),
-                                      lastDate: DateTime(2025),
-                                    ).then((value) {
-                                      if (value != null) {
-                                        setState(() {
-                                          _selectedDate = value;
-                                        });
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(100),
-                                      color: kMainColor,
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 30, vertical: 10),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.calendar_month_outlined,
-                                            color: kWhite,
-                                          ),
-                                          SizedBox(
-                                            width: 10,
-                                          ),
-                                          Text(
-                                            "Select Date",
-                                            style: TextStyle(
-                                              color: kWhite,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 10),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_month_outlined,
+                                        color: kWhite,
+                                        size: 20,
                                       ),
-                                    ),
-                                  ),
-                                ),
-
-                                //show selected date
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Text(
-                                  DateFormat.yMMMd().format(_selectedDate),
-                                  style: const TextStyle(
-                                    color: kGrey,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            //Date picker
-
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    showTimePicker(
-                                      context: context,
-                                      initialTime: TimeOfDay.now(),
-                                    ).then((value) {
-                                      if (value != null) {
-                                        setState(() {
-                                          _selectedTime = DateTime(
-                                            _selectedDate.year,
-                                            _selectedDate.month,
-                                            _selectedDate.day,
-                                            value.hour,
-                                            value.minute,
-                                          );
-                                        });
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(100),
-                                      color: kYellow,
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 30, vertical: 10),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.calendar_month_outlined,
-                                            color: kWhite,
-                                          ),
-                                          SizedBox(
-                                            width: 10,
-                                          ),
-                                          Text(
-                                            "Select Time",
-                                            style: TextStyle(
-                                              color: kWhite,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
+                                      SizedBox(width: 8),
+                                      Text(
+                                        "Select Date",
+                                        style: TextStyle(
+                                          color: kWhite,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ),
-
-                                //show selected date
-                                const SizedBox(
-                                  width: 20,
-                                ),
-                                Text(
-                                  DateFormat.jm().format(_selectedTime),
-                                  style: const TextStyle(
-                                    color: kGrey,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            const Divider(
-                              color: kLightGrey,
-                              thickness: 5,
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            GestureDetector(
-                              onTap: () async {
-                                if (_selected == 0) {
-                                  //create new expense
-                                  List<Expense> loadedExpenses =
-                                      await ExpenceService().loadExpenses();
-                                  Expense expense = Expense(
-                                    id: loadedExpenses.length +
-                                        1, // Calculate ID based on loaded expenses
-                                    title: _titleController.text,
-                                    amount: _amountController.text.isEmpty
-                                        ? 0
-                                        : double.parse(_amountController.text),
-                                    category: _expenceCategory,
-                                    date: _selectedDate,
-                                    time: _selectedTime,
-                                    description: _descriptionController.text,
-                                  );
-
-                                  //add expense to the list
-
-                                  widget.addExpense(expense);
-
-                                  //clear text fields
-                                  _titleController.clear();
-                                  _amountController.clear();
-                                  _descriptionController.clear();
-                                } else {
-                                  // Assuming a method to load income
-                                  List<Income> loadedIncome =
-                                      await IncomeServices().loadIncomes();
-                                  Income income = Income(
-                                    id: loadedIncome.length +
-                                        1, // Calculate ID based on loaded income
-                                    title: _titleController.text,
-                                    amount: _amountController.text.isEmpty
-                                        ? 0
-                                        : double.parse(_amountController.text),
-                                    category: _incomeCategory,
-                                    date: _selectedDate,
-                                    time: _selectedTime,
-                                    description: _descriptionController.text,
-                                  );
-
-                                  //add income to the list
-                                  widget.addIcome(income);
-
-                                  //clear text fields
-                                  _titleController.clear();
-                                  _amountController.clear();
-                                  _descriptionController.clear();
-                                }
-                              },
-                              child: CustumButton(
-                                buttonName: "Add",
-                                buttonColor: _selected == 0 ? kRed : kGreen,
                               ),
-                            )
+                            ),
+                            Text(
+                              DateFormat.yMMMd().format(_selectedDate),
+                              style: const TextStyle(
+                                color: kGrey,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
-                      )
-                    ],
+                        const SizedBox(height: 15),
+
+                        // Time picker
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                showTimePicker(
+                                  context: context,
+                                  initialTime: TimeOfDay.fromDateTime(
+                                      _selectedTime),
+                                ).then((value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      _selectedTime = DateTime(
+                                        _selectedDate.year,
+                                        _selectedDate.month,
+                                        _selectedDate.day,
+                                        value.hour,
+                                        value.minute,
+                                      );
+                                    });
+                                  }
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(100),
+                                  color: kYellow,
+                                ),
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 10),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.access_time,
+                                        color: kWhite,
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        "Select Time",
+                                        style: TextStyle(
+                                          color: kWhite,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              DateFormat.jm().format(_selectedTime),
+                              style: const TextStyle(
+                                color: kGrey,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        const Divider(
+                          color: kLightGrey,
+                          thickness: 2,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Add Button
+                        GestureDetector(
+                          onTap: _submitForm,
+                          child: CustumButton(
+                            buttonName:
+                                _selected == 0 ? "Add Expense" : "Add Income",
+                            buttonColor: _selected == 0 ? kRed : kGreen,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
-                )
+                ),
               ],
             ),
           ),

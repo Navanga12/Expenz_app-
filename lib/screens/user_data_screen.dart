@@ -48,8 +48,7 @@ class _UserDataScreenState extends State<UserDataScreen> {
                       TextFormField(
                         controller: _usernameController,
                         validator: (value) {
-                          //check weather the username is entered
-                          if (value!.isEmpty) {
+                          if (value == null || value.trim().isEmpty) {
                             return "Please Enter Your Name";
                           }
                           return null;
@@ -68,9 +67,15 @@ class _UserDataScreenState extends State<UserDataScreen> {
                       const SizedBox(height: 15),
                       TextFormField(
                         controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value!.isEmpty) {
+                          if (value == null || value.trim().isEmpty) {
                             return "Please Enter Your Email";
+                          }
+                          final emailRegex =
+                              RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                          if (!emailRegex.hasMatch(value.trim())) {
+                            return "Please Enter A Valid Email";
                           }
                           return null;
                         },
@@ -90,8 +95,11 @@ class _UserDataScreenState extends State<UserDataScreen> {
                         controller: _passwordContorller,
                         obscureText: true,
                         validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Please Enter A Valid Password";
+                          if (value == null || value.isEmpty) {
+                            return "Please Enter A Password";
+                          }
+                          if (value.length < 6) {
+                            return "Password Must Be At Least 6 Characters";
                           }
                           return null;
                         },
@@ -111,8 +119,11 @@ class _UserDataScreenState extends State<UserDataScreen> {
                         controller: _confirmPasswordContorller,
                         obscureText: true,
                         validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Please Enter A Valid Password";
+                          if (value == null || value.isEmpty) {
+                            return "Please Confirm Your Password";
+                          }
+                          if (value != _passwordContorller.text) {
+                            return "Passwords Do Not Match";
                           }
                           return null;
                         },
