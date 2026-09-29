@@ -129,6 +129,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: kRed,
       appBar: AppBar(
@@ -156,12 +157,12 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(kDefalutPadding),
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(30),
                     topRight: Radius.circular(30),
                   ),
-                  color: kWhite,
+                  color: isDark ? Theme.of(context).cardColor : kWhite,
                 ),
                 child: Form(
                   key: _formKey,
@@ -169,12 +170,12 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      const Text(
+                      Text(
                         "Category",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: kBlack,
+                          color: isDark ? Colors.white : kBlack,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -221,12 +222,12 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                         },
                       ),
                       const SizedBox(height: 20),
-                      const Text(
+                      Text(
                         "Title",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: kBlack,
+                          color: isDark ? Colors.white : kBlack,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -250,12 +251,12 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
+                      Text(
                         "Amount",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: kBlack,
+                          color: isDark ? Colors.white : kBlack,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -287,12 +288,12 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
+                      Text(
                         "Description",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: kBlack,
+                          color: isDark ? Colors.white : kBlack,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -322,9 +323,15 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                                   horizontal: 16,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: kLightGrey,
+                                  color: isDark
+                                      ? const Color(0xFF2C2C2C)
+                                      : kLightGrey,
                                   borderRadius: BorderRadius.circular(15),
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.grey.shade700
+                                        : Colors.grey.shade300,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
@@ -337,9 +344,10 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                                     Expanded(
                                       child: Text(
                                         DateFormat.yMMMd().format(_selectedDate),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 14,
+                                          color: isDark ? Colors.white : kBlack,
                                         ),
                                       ),
                                     ),
@@ -358,9 +366,15 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                                   horizontal: 16,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: kLightGrey,
+                                  color: isDark
+                                      ? const Color(0xFF2C2C2C)
+                                      : kLightGrey,
                                   borderRadius: BorderRadius.circular(15),
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.grey.shade700
+                                        : Colors.grey.shade300,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
@@ -373,9 +387,10 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                                     Expanded(
                                       child: Text(
                                         DateFormat.jm().format(_selectedTime),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 14,
+                                          color: isDark ? Colors.white : kBlack,
                                         ),
                                       ),
                                     ),

@@ -34,20 +34,22 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final data = _selected == 0
         ? widget.expenseCategoryTotals
         : widget.incomeCategoryTotals;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        title: const Text(
+        title: Text(
           "Financial Report",
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: kBlack,
+            color: isDark ? Colors.white : kBlack,
           ),
         ),
       ),
@@ -62,11 +64,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   height: MediaQuery.of(context).size.height * 0.06,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(100),
-                    color: kWhite,
+                    color: isDark ? Theme.of(context).cardColor : kWhite,
                     boxShadow: [
                       BoxShadow(
-                        color: kBlack.withOpacity(0.1),
-                        blurRadius: 20,
+                        color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
+                        blurRadius: 15,
                       ),
                     ],
                   ),
@@ -82,7 +84,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(100),
-                            color: _selected == 1 ? kWhite : kRed,
+                            color: _selected == 1
+                                ? (isDark ? Theme.of(context).cardColor : kWhite)
+                                : kRed,
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -92,7 +96,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                             child: Text(
                               "Expense",
                               style: TextStyle(
-                                color: _selected == 0 ? kWhite : kBlack,
+                                color: _selected == 0
+                                    ? kWhite
+                                    : (isDark ? Colors.white70 : kBlack),
                                 fontWeight: FontWeight.w500,
                                 fontSize: 16,
                               ),
@@ -109,7 +115,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(100),
-                            color: _selected == 0 ? kWhite : kGreen,
+                            color: _selected == 0
+                                ? (isDark ? Theme.of(context).cardColor : kWhite)
+                                : kGreen,
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -119,7 +127,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                             child: Text(
                               "Income",
                               style: TextStyle(
-                                color: _selected == 1 ? kWhite : kBlack,
+                                color: _selected == 1
+                                    ? kWhite
+                                    : (isDark ? Colors.white70 : kBlack),
                                 fontWeight: FontWeight.w500,
                                 fontSize: 16,
                               ),

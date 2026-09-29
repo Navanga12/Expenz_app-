@@ -30,6 +30,7 @@ class _CategoryCardState extends State<CategoryCard> {
             (widget.amount / widget.totalAmount)
         : 0;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.all(10),
       padding: const EdgeInsets.symmetric(
@@ -38,11 +39,11 @@ class _CategoryCardState extends State<CategoryCard> {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: kWhite,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: kBlack.withOpacity(0.1),
-            blurRadius: 20,
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+            blurRadius: 15,
           ),
         ],
       ),
@@ -54,7 +55,7 @@ class _CategoryCardState extends State<CategoryCard> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: widget.progressColor.withOpacity(0.2),
+                  color: widget.progressColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Padding(
@@ -64,21 +65,21 @@ class _CategoryCardState extends State<CategoryCard> {
                     children: [
                       Text(
                         widget.title,
-                        style: const TextStyle(
-                          fontSize: 18,
+                        style: TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: kBlack,
+                          color: isDark ? Colors.white : kBlack,
                         ),
                       ),
                       const SizedBox(
                         width: 10,
                       ),
                       Text(
-                        "${(widget.amount / widget.totalAmount * 100).toStringAsFixed(2)} %",
-                        style: const TextStyle(
-                          fontSize: 14,
+                        "${(widget.amount / widget.totalAmount * 100).toStringAsFixed(1)} %",
+                        style: TextStyle(
+                          fontSize: 13,
                           fontWeight: FontWeight.w400,
-                          color: kBlack,
+                          color: isDark ? Colors.grey.shade400 : kGrey,
                         ),
                       ),
                     ],
@@ -88,7 +89,7 @@ class _CategoryCardState extends State<CategoryCard> {
               Text(
                 "${widget.amount.toStringAsFixed(2)} \$",
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: FontWeight.w600,
                   color: widget.isExpense ? kRed : kGreen,
                 ),

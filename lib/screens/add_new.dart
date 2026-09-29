@@ -105,6 +105,7 @@ class _AddNewScreenState extends State<AddNewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: _selected == 0 ? kRed : kGreen,
       body: SafeArea(
@@ -121,7 +122,7 @@ class _AddNewScreenState extends State<AddNewScreen> {
                     height: MediaQuery.of(context).size.height * 0.06,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(100),
-                      color: kWhite,
+                      color: isDark ? Theme.of(context).cardColor : kWhite,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -138,7 +139,9 @@ class _AddNewScreenState extends State<AddNewScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(100),
-                              color: _selected == 1 ? kWhite : kRed,
+                              color: _selected == 1
+                                  ? (isDark ? Theme.of(context).cardColor : kWhite)
+                                  : kRed,
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -146,7 +149,9 @@ class _AddNewScreenState extends State<AddNewScreen> {
                               child: Text(
                                 "Expense",
                                 style: TextStyle(
-                                  color: _selected == 0 ? kWhite : kBlack,
+                                  color: _selected == 0
+                                      ? kWhite
+                                      : (isDark ? Colors.white70 : kBlack),
                                   fontWeight: FontWeight.w500,
                                   fontSize: 16,
                                 ),
@@ -166,7 +171,9 @@ class _AddNewScreenState extends State<AddNewScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(100),
-                              color: _selected == 0 ? kWhite : kGreen,
+                              color: _selected == 0
+                                  ? (isDark ? Theme.of(context).cardColor : kWhite)
+                                  : kGreen,
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -176,7 +183,9 @@ class _AddNewScreenState extends State<AddNewScreen> {
                               child: Text(
                                 "Income",
                                 style: TextStyle(
-                                  color: _selected == 1 ? kWhite : kBlack,
+                                  color: _selected == 1
+                                      ? kWhite
+                                      : (isDark ? Colors.white70 : kBlack),
                                   fontWeight: FontWeight.w500,
                                   fontSize: 16,
                                 ),
@@ -233,12 +242,12 @@ class _AddNewScreenState extends State<AddNewScreen> {
                       top: MediaQuery.of(context).size.height * 0.23),
                   padding: const EdgeInsets.all(kDefalutPadding),
                   width: double.infinity,
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),
                     ),
-                    color: kWhite,
+                    color: isDark ? Theme.of(context).cardColor : kWhite,
                   ),
                   child: Form(
                     key: _formKey,

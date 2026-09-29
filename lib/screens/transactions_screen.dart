@@ -39,6 +39,27 @@ class TransactionsScreen extends StatefulWidget {
 class _TransactionsScreenState extends State<TransactionsScreen> {
   ExpenseCategory? _selectedCategory;
   DateTime? _selectedDate;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      final text = _searchController.text.trim().toLowerCase();
+      if (_searchQuery != text) {
+        setState(() {
+          _searchQuery = text;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   List<Expense> get _filteredExpenses {
     return widget.expensesList.where((expense) {
@@ -48,7 +69,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           (expense.date.year == _selectedDate!.year &&
               expense.date.month == _selectedDate!.month &&
               expense.date.day == _selectedDate!.day);
-      return matchesCategory && matchesDate;
+      final matchesSearch = _searchQuery.isEmpty ||
+          expense.title.toLowerCase().contains(_searchQuery) ||
+          expense.description.toLowerCase().contains(_searchQuery) ||
+          expense.category.name.toLowerCase().contains(_searchQuery);
+      return matchesCategory && matchesDate && matchesSearch;
+    }).toList();
+  }
+
+  List<Income> get _filteredIncomes {
+    return widget.incomeList.where((income) {
+      final matchesSearch = _searchQuery.isEmpty ||
+          income.title.toLowerCase().contains(_searchQuery) ||
+          income.description.toLowerCase().contains(_searchQuery) ||
+          income.category.name.toLowerCase().contains(_searchQuery);
+      return matchesSearch;
     }).toList();
   }
 
@@ -70,17 +105,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     setState(() {
       _selectedCategory = null;
       _selectedDate = null;
+      _searchController.clear();
+      _searchQuery = "";
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bool hasActiveFilters =
-        _selectedCategory != null || _selectedDate != null;
+        _selectedCategory != null || _selectedDate != null || _searchQuery.isNotEmpty;
     final filteredExpenses = _filteredExpenses;
+    final filteredIncomes = _filteredIncomes;
 
     return Scaffold(
-      backgroundColor: kWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(kDefalutPadding),
@@ -111,13 +150,107 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               ),
               const SizedBox(height: 15),
 
+              // Search Bar
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? Theme.of(context).cardColor : kWhite,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _searchQuery.isNotEmpty
+                        ? kMainColor
+                        : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                    width: _searchQuery.isNotEmpty ? 1.5 : 1.0,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : kBlack,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Search by title, note, or category...",
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.grey.shade500 : kGrey,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: kMainColor,
+                      size: 22,
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18, color: kGrey),
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+              ),
+
+              if (_searchQuery.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.manage_search, size: 16, color: kMainColor),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          "Filtering by \"${_searchController.text.trim()}\"",
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: kMainColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => _searchController.clear(),
+                        child: const Text(
+                          "Clear",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: kRed,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 15),
+
               // Filter Controls
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: kLightGrey.withValues(alpha: 0.5),
+                  color: isDark
+                      ? Theme.of(context).cardColor
+                      : kLightGrey.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,16 +258,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.filter_list, size: 18, color: kGrey),
-                            SizedBox(width: 6),
+                            const Icon(Icons.filter_list, size: 18, color: kGrey),
+                            const SizedBox(width: 6),
                             Text(
                               "Filter Expenses",
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: kBlack,
+                                color: isDark ? Colors.white : kBlack,
                               ),
                             ),
                           ],
@@ -150,12 +283,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             decoration: BoxDecoration(
                               color: _selectedDate != null
                                   ? kMainColor
-                                  : kWhite,
+                                  : (isDark ? const Color(0xFF2C2C2C) : kWhite),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: _selectedDate != null
                                     ? kMainColor
-                                    : Colors.grey.shade300,
+                                    : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
                               ),
                             ),
                             child: Row(
@@ -165,7 +298,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   size: 14,
                                   color: _selectedDate != null
                                       ? kWhite
-                                      : kGrey,
+                                      : (isDark ? Colors.white70 : kGrey),
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -177,7 +310,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     fontWeight: FontWeight.w500,
                                     color: _selectedDate != null
                                         ? kWhite
-                                        : kBlack,
+                                        : (isDark ? Colors.white : kBlack),
                                   ),
                                 ),
                                 if (_selectedDate != null) ...[
@@ -215,7 +348,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             labelStyle: TextStyle(
                               color: _selectedCategory == null
                                   ? kWhite
-                                  : kBlack,
+                                  : (isDark ? Colors.white70 : kBlack),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -245,7 +378,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 selectedColor: expenseCategoryColors[category] ??
                                     kMainColor,
                                 labelStyle: TextStyle(
-                                  color: isSelected ? kWhite : kBlack,
+                                  color: isSelected
+                                      ? kWhite
+                                      : (isDark ? Colors.white70 : kBlack),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -270,12 +405,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "Expenses",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: kBlack,
+                      color: isDark ? Colors.white : kBlack,
                     ),
                   ),
                   Text(
@@ -346,12 +481,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           color: Colors.grey.shade400,
                         ),
                         const SizedBox(height: 10),
-                        const Text(
+                        Text(
                           "No expenses recorded yet",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: kBlack,
+                            color: isDark ? Colors.white : kBlack,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -371,18 +506,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       children: [
                         const Icon(
                           Icons.search_off_rounded,
-                          size: 40,
+                          size: 44,
                           color: kGrey,
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          "No expenses match the selected filter.",
-                          style: TextStyle(fontSize: 15, color: kGrey),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? "No expenses found matching \"${_searchController.text.trim()}\""
+                              : "No expenses match the selected filter.",
+                          style: const TextStyle(fontSize: 15, color: kGrey),
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
-                        TextButton(
+                        TextButton.icon(
                           onPressed: _clearFilters,
-                          child: const Text("Clear Filter"),
+                          icon: const Icon(Icons.clear, size: 16),
+                          label: Text(
+                            _searchQuery.isNotEmpty
+                                ? "Clear Search"
+                                : "Clear Filter",
+                          ),
                         ),
                       ],
                     ),
@@ -442,16 +585,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "Income",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: kBlack,
+                      color: isDark ? Colors.white : kBlack,
                     ),
                   ),
                   Text(
-                    "${widget.incomeList.length} items",
+                    "${filteredIncomes.length} of ${widget.incomeList.length}",
                     style: const TextStyle(
                       fontSize: 13,
                       color: kGrey,
@@ -473,13 +616,33 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     ),
                   ),
                 )
+              else if (filteredIncomes.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.search_off_rounded,
+                          size: 36,
+                          color: kGrey,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "No income matching \"${_searchController.text.trim()}\"",
+                          style: const TextStyle(fontSize: 14, color: kGrey),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               else
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: widget.incomeList.length,
+                  itemCount: filteredIncomes.length,
                   itemBuilder: (context, index) {
-                    final income = widget.incomeList[index];
+                    final income = filteredIncomes[index];
                     return Dismissible(
                       key: ValueKey("income_${income.id}"),
                       direction: DismissDirection.startToEnd,

@@ -1,6 +1,7 @@
 import 'package:expenz/screens/onboarding_screen.dart';
 import 'package:expenz/services/expence_services.dart';
 import 'package:expenz/services/income_services.dart';
+import 'package:expenz/services/theme_service.dart';
 import 'package:expenz/services/user_details_service.dart';
 import 'package:expenz/utils/colors.dart';
 import 'package:expenz/utils/constants.dart';
@@ -8,7 +9,7 @@ import 'package:expenz/widgets/profile_card.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key});
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -20,8 +21,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   //open scffold messenger for logout
   void _showBottomSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
-      backgroundColor: kLightGrey,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : kLightGrey,
       context: context,
       builder: (context) {
         return Container(
@@ -31,12 +33,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 "Are you sure you want to log out?",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: kGrey,
+                  color: isDark ? Colors.white : kGrey,
                 ),
               ),
               const SizedBox(height: 20),
@@ -45,18 +47,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(kMainColor),
+                      backgroundColor: WidgetStateProperty.all(kMainColor),
                     ),
                     onPressed: () async {
                       // Clear the user details from shared preferences
                       await UserService.clearUserDetails();
 
                       //remove all expenses and incomes
-                      if (context.mounted == true) {
-                        await ExpenceService().deleteAllExpenses(context);
-                        await IncomeServices().deleteAllIncomes(context);
-                      }
+                      if (!context.mounted) return;
+                      await ExpenceService().deleteAllExpenses(context);
+                      if (!context.mounted) return;
+                      await IncomeServices().deleteAllIncomes(context);
 
+                      if (!context.mounted) return;
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
@@ -74,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(kMainColor),
+                      backgroundColor: WidgetStateProperty.all(kMainColor),
                     ),
                     onPressed: () {
                       Navigator.pop(context);
@@ -113,7 +116,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -155,9 +160,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         Text(
                           "Welcome $username",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : kBlack,
                           ),
                         ),
                       ],
@@ -172,7 +178,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 50,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: kLightGrey,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : kLightGrey,
                         ),
                         child: const Icon(
                           Icons.edit,
@@ -184,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 const SizedBox(
-                  height: 20,
+                  height: 25,
                 ),
                 const ProfileCard(
                   icon: Icons.wallet,
@@ -195,6 +203,87 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.settings,
                   title: "Settings",
                   color: kMainColor,
+                ),
+                // Dark Mode Switch Card
+                ValueListenableBuilder<ThemeMode>(
+                  valueListenable: ThemeService.themeNotifier,
+                  builder: (context, mode, _) {
+                    final darkModeActive = mode == ThemeMode.dark;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: kDefalutPadding),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Theme.of(context).cardColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: darkModeActive ? 0.35 : 0.08,
+                            ),
+                            spreadRadius: 1,
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: kMainColor.withValues(alpha: 0.15),
+                            ),
+                            child: Icon(
+                              darkModeActive
+                                  ? Icons.dark_mode
+                                  : Icons.light_mode,
+                              color: kMainColor,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Dark Mode",
+                                  style: TextStyle(
+                                    color: darkModeActive
+                                        ? Colors.white
+                                        : kBlack.withValues(alpha: 0.8),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  darkModeActive
+                                      ? "Dark theme active"
+                                      : "Light theme active",
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: kGrey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: darkModeActive,
+                            activeTrackColor: kMainColor,
+                            onChanged: (val) {
+                              ThemeService.toggleTheme(val);
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 const ProfileCard(
                   icon: Icons.download,

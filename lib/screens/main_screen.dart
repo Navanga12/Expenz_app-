@@ -200,12 +200,14 @@ class _MainScreenState extends State<MainScreen> {
       ),
       const ProfileScreen(),
     ];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: kWhite,
+        backgroundColor: Theme.of(context).cardColor,
         selectedItemColor: kMainColor,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: isDark ? Colors.grey.shade400 : Colors.grey,
         selectedLabelStyle: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,

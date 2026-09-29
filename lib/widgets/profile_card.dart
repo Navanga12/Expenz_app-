@@ -15,15 +15,16 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: kDefalutPadding),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: kWhite,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 3),
@@ -39,7 +40,7 @@ class ProfileCard extends StatelessWidget {
               height: 60,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: color.withOpacity(0.15),
+                color: color.withValues(alpha: 0.15),
               ),
               child: Icon(
                 icon,
@@ -52,7 +53,7 @@ class ProfileCard extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              color: kBlack.withOpacity(0.6),
+              color: isDark ? Colors.white : kBlack.withValues(alpha: 0.8),
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),

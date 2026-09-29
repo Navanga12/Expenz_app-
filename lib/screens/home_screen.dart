@@ -1,6 +1,7 @@
 import 'package:expenz/models/expence_model.dart';
 import 'package:expenz/models/income_model.dart';
 import 'package:expenz/screens/edit_expense_screen.dart';
+import 'package:expenz/services/theme_service.dart';
 import 'package:expenz/services/user_details_service.dart';
 import 'package:expenz/utils/colors.dart';
 import 'package:expenz/utils/constants.dart';
@@ -76,7 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -85,7 +88,9 @@ class _HomeScreenState extends State<HomeScreen> {
               // Top Welcome and Month Summary Container
               Container(
                 decoration: BoxDecoration(
-                  color: kMainColor.withValues(alpha: 0.15),
+                  color: isDark
+                      ? kMainColor.withValues(alpha: 0.25)
+                      : kMainColor.withValues(alpha: 0.15),
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(30),
                     bottomRight: Radius.circular(30),
@@ -116,20 +121,45 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
-                          Text(
-                            "Welcome $username",
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              "Welcome $username",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : kBlack,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 20),
+                          ValueListenableBuilder<ThemeMode>(
+                            valueListenable: ThemeService.themeNotifier,
+                            builder: (context, mode, _) {
+                              final darkModeActive = mode == ThemeMode.dark;
+                              return IconButton(
+                                tooltip: darkModeActive
+                                    ? "Switch to Light Mode"
+                                    : "Switch to Dark Mode",
+                                icon: Icon(
+                                  darkModeActive
+                                      ? Icons.light_mode
+                                      : Icons.dark_mode_outlined,
+                                  color: kMainColor,
+                                  size: 26,
+                                ),
+                                onPressed: () {
+                                  ThemeService.toggleTheme(!darkModeActive);
+                                },
+                              );
+                            },
+                          ),
                           IconButton(
                             onPressed: () {},
                             icon: const Icon(
-                              Icons.notifications,
+                              Icons.notifications_none_rounded,
                               color: kMainColor,
-                              size: 30,
+                              size: 28,
                             ),
                           ),
                         ],
@@ -143,11 +173,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: kWhite,
+                          color: isDark ? Theme.of(context).cardColor : kWhite,
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: Colors.black.withOpacity(isDark ? 0.35 : 0.05),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -184,10 +214,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const SizedBox(width: 6),
                                 Text(
                                   DateFormat.yMMMM().format(_selectedMonth),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: kBlack,
+                                    color: isDark ? Colors.white : kBlack,
                                   ),
                                 ),
                               ],
@@ -301,11 +331,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Recent Transactions",
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : kBlack,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -365,12 +396,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.grey.shade400,
                               ),
                               const SizedBox(height: 10),
-                              const Text(
+                              Text(
                                 "No expenses recorded yet",
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: kBlack,
+                                  color: isDark ? Colors.white : kBlack,
                                 ),
                               ),
                               const SizedBox(height: 4),
