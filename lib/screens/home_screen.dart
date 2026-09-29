@@ -1,4 +1,5 @@
 import 'package:expenz/models/expence_model.dart';
+import 'package:expenz/screens/edit_expense_screen.dart';
 import 'package:expenz/services/user_details_service.dart';
 import 'package:expenz/utils/colors.dart';
 import 'package:expenz/utils/constants.dart';
@@ -9,9 +10,12 @@ import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
   final List<Expense> expensesList;
+  final void Function(Expense)? onUpdateExpense;
+
   const HomeScreen({
     super.key,
     required this.expensesList,
+    this.onUpdateExpense,
   });
 
   @override
@@ -194,6 +198,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                     category: expense.category,
                                     description: expense.description,
                                     createdAt: expense.time,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => EditExpenseScreen(
+                                            expense: expense,
+                                            onUpdateExpense: (updated) {
+                                              widget.onUpdateExpense?.call(updated);
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   );
                                 },
                               ),

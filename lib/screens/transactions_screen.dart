@@ -1,5 +1,6 @@
 import 'package:expenz/models/expence_model.dart';
 import 'package:expenz/models/income_model.dart';
+import 'package:expenz/screens/edit_expense_screen.dart';
 import 'package:expenz/utils/colors.dart';
 import 'package:expenz/utils/constants.dart';
 import 'package:expenz/widgets/expence_card.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/material.dart';
 class TransactionsScreen extends StatefulWidget {
   final List<Expense> expensesList;
   final void Function(Expense) onDismissedExpenses;
+  final void Function(Expense)? onUpdateExpense;
 
   final List<Income> incomeList;
   final void Function(Income) onDismissedIncome;
@@ -17,6 +19,7 @@ class TransactionsScreen extends StatefulWidget {
     super.key,
     required this.expensesList,
     required this.onDismissedExpenses,
+    this.onUpdateExpense,
     required this.incomeList,
     required this.onDismissedIncome,
   });
@@ -101,6 +104,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     category: expense.category,
                                     description: expense.description,
                                     createdAt: expense.time,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => EditExpenseScreen(
+                                            expense: expense,
+                                            onUpdateExpense: (updated) {
+                                              widget.onUpdateExpense?.call(updated);
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 );
                               },

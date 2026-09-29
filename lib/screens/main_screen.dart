@@ -110,6 +110,20 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  // Function to update an existing expense
+  void updateExpense(Expense updatedExpense) {
+    // Update the expense in shared preferences
+    ExpenceService().updateExpense(updatedExpense, context);
+
+    // Update the list of expenses in state
+    setState(() {
+      int index = expensesList.indexWhere((e) => e.id == updatedExpense.id);
+      if (index != -1) {
+        expensesList[index] = updatedExpense;
+      }
+    });
+  }
+
   //fetch incomes
   void fetchIncomes() async {
     // Load incomes from shared preferences
@@ -148,10 +162,12 @@ class _MainScreenState extends State<MainScreen> {
     final List<Widget> pages = [
       HomeScreen(
         expensesList: expensesList,
+        onUpdateExpense: updateExpense,
       ),
       TransactionsScreen(
         expensesList: expensesList,
         onDismissedExpenses: deleteExpense,
+        onUpdateExpense: updateExpense,
         incomeList: incomesList,
         onDismissedIncome: deleteIncome,
       ),

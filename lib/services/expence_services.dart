@@ -117,4 +117,42 @@ class ExpenceService {
       print(e.toString());
     }
   }
+
+  // Update an existing expense in shared preferences
+  Future<void> updateExpense(Expense updatedExpense, BuildContext context) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String>? existingExpenses = prefs.getStringList(_expensesKey);
+
+      List<Expense> existingExpenseObjects = [];
+      if (existingExpenses != null) {
+        existingExpenseObjects = existingExpenses
+            .map((e) => Expense.fromJson(json.decode(e)))
+            .toList();
+      }
+
+      int index =
+          existingExpenseObjects.indexWhere((e) => e.id == updatedExpense.id);
+      if (index != -1) {
+        existingExpenseObjects[index] = updatedExpense;
+
+        List<String> updatedExpenseStrings =
+            existingExpenseObjects.map((e) => json.encode(e.toJson())).toList();
+
+        await prefs.setStringList(_expensesKey, updatedExpenseStrings);
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Expense updated successfully'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+  }
 }
+
